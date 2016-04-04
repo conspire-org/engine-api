@@ -1,0 +1,931 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Relationship Engine API",
+    "description": "Conspire Relationship Engine API",
+    "contact": {
+      "name": "Paul McReynolds",
+      "email": "paul@conspire.com"
+    }
+  },
+  "schemes": [
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/accounts/{address}": {
+      "put": {
+        "tags": [
+          "accounts"
+        ],
+        "description": "Adds or updates an account, including credentials for connecting to and loading messages from the account.",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Email address of account to add/update.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "account",
+            "in": "body",
+            "description": "The account, including a type-appropriate config object. For non-Gmail accounts, config should include type (must be \"imap\"), host (IMAP only), port, ssl (boolean), username and password properties.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NewAccount"
+            }
+          },
+          {
+            "name": "test_connection",
+            "in": "query",
+            "description": "If true, test connection to the account before saving.",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Added/updated account.",
+            "schema": {
+              "$ref": "#/definitions/Account"
+            },
+            "examples": {
+              "application/json": {
+                "address": "leslie.knope@gmail.com",
+                "loaded_at": "<null>",
+                "analyzed_at": "<null>",
+                "graphed_at": "<null>",
+                "load_error": "<null>",
+                "analyze_error": "<null>",
+                "loaded_count": 0,
+                "config": {
+                  "type": "gmail",
+                  "google_user_id": "101921637898885014521",
+                  "oauth2_client_id": "XXXXX.apps.googleusercontent.com",
+                  "oauth2_client_secret": "XXXXX",
+                  "oauth2_access_token": "XXXXX",
+                  "oauth2_refresh_token": "XXXXX"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "accounts"
+        ],
+        "description": "Gets an Account, including credentials and processing status.",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Email address of account to fetch.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The account.",
+            "schema": {
+              "$ref": "#/definitions/Account"
+            },
+            "examples": {
+              "application/json": {
+                "address": "leslie.knope@gmail.com",
+                "loaded_at": "2016-03-18T12:08:46.23Z",
+                "analyzed_at": "2016-03-18T12:10:22.41Z",
+                "graphed_at": "2016-03-18T12:51:12.21Z",
+                "load_error": "<null>",
+                "analyze_error": "<null>",
+                "loaded_count": 1021718,
+                "config": {
+                  "type": "gmail",
+                  "google_user_id": "101921637898885014521",
+                  "oauth2_client_id": "XXXXX.apps.googleusercontent.com",
+                  "oauth2_client_secret": "XXXXX",
+                  "oauth2_access_token": "XXXXX",
+                  "oauth2_refresh_token": "XXXXX"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "accounts"
+        ],
+        "description": "Deletes an Account.",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Email address of account to delete.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          }
+        }
+      }
+    },
+    "/people": {
+      "get": {
+        "tags": [
+          "people"
+        ],
+        "description": "Scans all people. Each request accepts a starting canonical address (exclusive) and returns up to the specified or a default maximum number of consecutive people.",
+        "parameters": [
+          {
+            "name": "start_canonical_address_exclusive",
+            "in": "query",
+            "description": "Canonical address of the first person (exclusive) to return.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The maximum number of consecutive people to return.",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The batch of people.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Person"
+              }
+            },
+            "examples": {
+              "application/json": [
+                {
+                  "name": "Andy Dwyer",
+                  "addresses": [
+                    "andyd@gmail.com"
+                  ],
+                  "canonical_address": "andyd@gmail.com",
+                  "connectedness": 8967.0052259312
+                },
+                {
+                  "name": "Leslie Knope",
+                  "addresses": [
+                    "leslie.knope@gmail.com",
+                    "leslie.knope@parks.pawnee.gov",
+                    "yeslie@yahoo.com"
+                  ],
+                  "canonical_address": "leslie.knope@gmail.com",
+                  "connectedness": 26087.021849682
+                },
+                {
+                  "name": "Ron Swanson",
+                  "addresses": [
+                    "ron.swanson@parks.pawnee.gov",
+                    "ron.swanson@yahoo.com",
+                    "rons@hotmail.com"
+                  ],
+                  "canonical_address": "ron.swanson@parks.pawnee.gov",
+                  "connectedness": 31122.6829692811
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/people/{address}": {
+      "get": {
+        "tags": [
+          "people"
+        ],
+        "description": "Gets a person by canonical address.",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Canonical address of the person to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The person.",
+            "schema": {
+              "$ref": "#/definitions/Person"
+            },
+            "examples": {
+              "application/json": {
+                "name": "Leslie Knope",
+                "addresses": [
+                  "leslie.knope@gmail.com",
+                  "leslie.knope@parks.pawnee.gov",
+                  "yeslie@yahoo.com"
+                ],
+                "canonical_address": "leslie.knope@gmail.com",
+                "connectedness": 26087.021849682
+              }
+            }
+          }
+        }
+      }
+    },
+    "/people/{address}/contacts": {
+      "get": {
+        "tags": [
+          "people"
+        ],
+        "description": "Gets a person's contacts by canonical address.",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Canonical address of the person for whom to get contacts.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The contacts.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Contact"
+              }
+            },
+            "examples": {
+              "application/json": [
+                {
+                  "person": {
+                    "name": "Leslie Knope",
+                    "addresses": [
+                      "leslie.knope@gmail.com",
+                      "leslie.knope@parks.pawnee.gov",
+                      "yeslie@yahoo.com"
+                    ],
+                    "canonical_address": "leslie.knope@gmail.com",
+                    "connectedness": 26087.021849682
+                  },
+                  "score": 102.89582713
+                },
+                {
+                  "person": {
+                    "name": "Andy Dwyer",
+                    "addresses": [
+                      "andyd@gmail.com"
+                    ],
+                    "canonical_address": "andyd@gmail.com",
+                    "connectedness": 8967.0052259312
+                  },
+                  "score": 13.27234352
+                },
+                {
+                  "person": {
+                    "name": "Ben Scott",
+                    "addresses": [
+                      "benscott@gmail.com",
+                      "scottb@revenue.indiana.gov"
+                    ],
+                    "canonical_address": "benscott@gmail.com",
+                    "connectedness": 12063.67822
+                  },
+                  "score": 4.96792271112
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/people/{address}/common_contacts/{other}": {
+      "get": {
+        "tags": [
+          "people"
+        ],
+        "description": "Given a person's canonical address and another person's canonical address, returns common contacts shared by the two people.",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Canonical address of the person for whom to get common contacts.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "other",
+            "in": "path",
+            "description": "Canonical address of the person with whom to get the person's common contacts.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Common contacts shared by the specified people.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CommonContact"
+              }
+            },
+            "examples": {
+              "application/json": [
+                {
+                  "contact": {
+                    "name": "Leslie Knope",
+                    "addresses": [
+                      "leslie.knope@gmail.com",
+                      "leslie.knope@parks.pawnee.gov",
+                      "yeslie@yahoo.com"
+                    ],
+                    "canonical_address": "leslie.knope@gmail.com",
+                    "connectedness": 26087.021849682
+                  },
+                  "score_in": 102.89582713,
+                  "score_out": 15.14692853965
+                },
+                {
+                  "contact": {
+                    "name": "Andy Dwyer",
+                    "addresses": [
+                      "andyd@gmail.com"
+                    ],
+                    "canonical_address": "andyd@gmail.com",
+                    "connectedness": 8967.0052259312
+                  },
+                  "score_in": 13.27234352,
+                  "score_out": 56.869281912
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/domains": {
+      "get": {
+        "tags": [
+          "domains"
+        ],
+        "description": "Scans all domains. Each request accepts a starting domain name (exclusive) and returns up to the specified or a default maximum number of consecutive domain records.",
+        "parameters": [
+          {
+            "name": "start_name_exclusive",
+            "in": "query",
+            "description": "Domain name of the first domain (exclusive) to return.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The maximum number of consecutive domains to return.",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The batch of domains.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Domain"
+              }
+            },
+            "examples": {
+              "application/json": [
+                {
+                  "name": "entertainment720.com",
+                  "address_count": 4
+                },
+                {
+                  "name": "nps.gov",
+                  "address_count": 107
+                },
+                {
+                  "name": "parks.pawnee.gov",
+                  "address_count": 26
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/domains/{name}": {
+      "get": {
+        "tags": [
+          "domains"
+        ],
+        "description": "Gets a domain by domain name.",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "Domain name of the domain to get.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The domain.",
+            "schema": {
+              "$ref": "#/definitions/Domain"
+            },
+            "examples": {
+              "application/json": {
+                "name": "parks.pawnee.gov",
+                "address_count": 26
+              }
+            }
+          }
+        }
+      }
+    },
+    "/domains/{name}/addresses": {
+      "get": {
+        "tags": [
+          "domains"
+        ],
+        "description": "Gets an array of all email addresses with the specified domain.",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "Domain name of the domain for which to get addresses.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All email addresses with the specified domain.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "examples": {
+              "application/json": [
+                "jr@entertainment720.com",
+                "tom@entertainment720.com",
+                "victoria@entertainment720.com",
+                "yves@entertainment720.com"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/domains/{name}/common_contacts/{address}": {
+      "get": {
+        "tags": [
+          "domains"
+        ],
+        "description": "Given a domain name and a person's canonical address, returns an array of common contacts between the specified person and people with addresses at the specified domain.",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "Domain name of the domain for which to get common contacts.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Canonical address of the person with whom to get the domain's common contacts.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Common contacts between the specified person and people with addresses at the specified domain.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/DomainCommonContact"
+              }
+            },
+            "examples": {
+              "application/json": [
+                {
+                  "contact": {
+                    "name": "Andy Dwyer",
+                    "addresses": [
+                      "andyd@gmail.com"
+                    ],
+                    "canonical_address": "andyd@gmail.com",
+                    "connectedness": 8967.0052259312
+                  },
+                  "domain_person": {
+                    "name": "Leslie Knope",
+                    "addresses": [
+                      "leslie.knope@gmail.com",
+                      "leslie.knope@parks.pawnee.gov",
+                      "yeslie@yahoo.com"
+                    ],
+                    "canonical_address": "leslie.knope@gmail.com",
+                    "connectedness": 26087.021849682
+                  },
+                  "score_in": 13.27234352,
+                  "score_out": 72.969296772
+                },
+                {
+                  "contact": {
+                    "name": "Ben Scott",
+                    "addresses": [
+                      "benscott@gmail.com",
+                      "scottb@revenue.indiana.gov"
+                    ],
+                    "canonical_address": "benscott@gmail.com",
+                    "connectedness": 12063.67822
+                  },
+                  "domain_person": {
+                    "name": "Ron Swanson",
+                    "addresses": [
+                      "ron.swanson@parks.pawnee.gov",
+                      "ron.swanson@yahoo.com",
+                      "rons@hotmail.com"
+                    ],
+                    "canonical_address": "ron.swanson@parks.pawnee.gov",
+                    "connectedness": 31122.6829692811
+                  },
+                  "score_in": 13.27234352,
+                  "score_out": 72.969296772
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Account": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/NewAccount"
+        },
+        {
+          "type": "object",
+          "required": [
+            "address",
+            "loaded_at",
+            "analyzed_at",
+            "graphed_at",
+            "load_error",
+            "analyze_error",
+            "loaded_count"
+          ],
+          "properties": {
+            "address": {
+              "type": "string"
+            },
+            "loaded_at": {
+              "type": "string",
+              "format": "date"
+            },
+            "analyzed_at": {
+              "type": "string",
+              "format": "date"
+            },
+            "graphed_at": {
+              "type": "string",
+              "format": "date"
+            },
+            "load_error": {
+              "type": "string"
+            },
+            "analyze_error": {
+              "type": "string"
+            },
+            "loaded_count": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "message_count": {
+              "type": "integer",
+              "format": "int64",
+              "description": "Total count of messages in the account. Available only for Gmail accounts."
+            }
+          }
+        }
+      ],
+      "example": {
+        "address": "leslie.knope@gmail.com",
+        "type": "gmail",
+        "loaded_at": "2016-03-18T12:08:46.23Z",
+        "analyzed_at": "2016-03-18T12:10:22.41Z",
+        "graphed_at": "2016-03-18T12:51:12.21Z",
+        "load_error": "<null>",
+        "analyze_error": "<null>",
+        "loaded_count": 1021718,
+        "config": {
+          "type": "gmail",
+          "google_user_id": "101921637898885014521",
+          "oauth2_client_id": "XXXXX.apps.googleusercontent.com",
+          "oauth2_client_secret": "XXXXX",
+          "oauth2_access_token": "XXXXX",
+          "oauth2_refresh_token": "XXXXX"
+        }
+      }
+    },
+    "NewAccount": {
+      "type": "object",
+      "required": [
+        "config"
+      ],
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/AccountConfig"
+        }
+      },
+      "example": {
+        "config": {
+          "type": "gmail",
+          "google_user_id": "101921637898885014521",
+          "oauth2_client_id": "XXXXX.apps.googleusercontent.com",
+          "oauth2_client_secret": "XXXXX",
+          "oauth2_access_token": "XXXXX",
+          "oauth2_refresh_token": "XXXXX"
+        }
+      }
+    },
+    "AccountConfig": {
+      "type": "object",
+      "discriminator": "type",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "gmail",
+            "imap"
+          ]
+        }
+      },
+      "example": {
+        "type": "gmail",
+        "google_user_id": "101921637898885014521",
+        "oauth2_client_id": "XXXXX.apps.googleusercontent.com",
+        "oauth2_client_secret": "XXXXX",
+        "oauth2_access_token": "XXXXX",
+        "oauth2_refresh_token": "XXXXX"
+      }
+    },
+    "gmail": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AccountConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "google_user_id",
+            "oauth2_client_id",
+            "oauth2_client_secret",
+            "oauth2_access_token",
+            "oauth2_refresh_token"
+          ],
+          "properties": {
+            "google_user_id": {
+              "type": "string"
+            },
+            "oauth2_client_id": {
+              "type": "string"
+            },
+            "oauth2_client_secret": {
+              "type": "string"
+            },
+            "oauth2_access_token": {
+              "type": "string"
+            },
+            "oauth2_refresh_token": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "example": {
+        "type": "gmail",
+        "google_user_id": "101921637898885014521",
+        "oauth2_client_id": "XXXXX.apps.googleusercontent.com",
+        "oauth2_client_secret": "XXXXX",
+        "oauth2_access_token": "XXXXX",
+        "oauth2_refresh_token": "XXXXX"
+      }
+    },
+    "imap": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AccountConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "host",
+            "port",
+            "ssl",
+            "username",
+            "password"
+          ],
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "ssl": {
+              "type": "boolean"
+            },
+            "username": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "example": {
+        "type": "imap",
+        "host": "mail.yahoo.com",
+        "port": 993,
+        "ssl": true,
+        "username": "ron.swanson@yahoo.com",
+        "password": "XXXXX"
+      }
+    },
+    "Person": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "canonical_address": {
+          "type": "string"
+        },
+        "connectedness": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "example": {
+        "name": "Leslie Knope",
+        "addresses": [
+          "leslie.knope@gmail.com",
+          "leslie.knope@parks.pawnee.gov",
+          "yeslie@yahoo.com"
+        ],
+        "canonical_address": "leslie.knope@gmail.com",
+        "connectedness": 26087.021849682
+      }
+    },
+    "Contact": {
+      "type": "object",
+      "properties": {
+        "person": {
+          "$ref": "#/definitions/Person"
+        },
+        "score": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "example": {
+        "person": {
+          "name": "Leslie Knope",
+          "addresses": [
+            "leslie.knope@gmail.com",
+            "leslie.knope@parks.pawnee.gov",
+            "yeslie@yahoo.com"
+          ],
+          "canonical_address": "leslie.knope@gmail.com",
+          "connectedness": 26087.021849682
+        },
+        "score": 102.89582713
+      }
+    },
+    "CommonContact": {
+      "type": "object",
+      "properties": {
+        "contact": {
+          "$ref": "#/definitions/Person"
+        },
+        "score_in": {
+          "type": "number",
+          "format": "double"
+        },
+        "score_out": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "example": {
+        "contact": {
+          "name": "Leslie Knope",
+          "addresses": [
+            "leslie.knope@gmail.com",
+            "leslie.knope@parks.pawnee.gov",
+            "yeslie@yahoo.com"
+          ],
+          "canonical_address": "leslie.knope@gmail.com",
+          "connectedness": 26087.021849682
+        },
+        "score_in": 102.89582713,
+        "score_out": 15.14692853965
+      }
+    },
+    "Domain": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "address_count": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "example": {
+        "name": "parks.pawnee.gov",
+        "address_count": 26
+      }
+    },
+    "DomainCommonContact": {
+      "type": "object",
+      "properties": {
+        "contact": {
+          "$ref": "#/definitions/Person"
+        },
+        "domain_person": {
+          "$ref": "#/definitions/Person"
+        },
+        "score_in": {
+          "type": "number",
+          "format": "double"
+        },
+        "score_out": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "example": {
+        "contact": {
+          "name": "Andy Dwyer",
+          "addresses": [
+            "andyd@gmail.com"
+          ],
+          "canonical_address": "andyd@gmail.com",
+          "connectedness": 8967.0052259312
+        },
+        "domain_person": {
+          "name": "Leslie Knope",
+          "addresses": [
+            "leslie.knope@gmail.com",
+            "leslie.knope@parks.pawnee.gov",
+            "yeslie@yahoo.com"
+          ],
+          "canonical_address": "leslie.knope@gmail.com",
+          "connectedness": 26087.021849682
+        },
+        "score_in": 46.92859221,
+        "score_out": 68.059281050702
+      }
+    }
+  }
+}

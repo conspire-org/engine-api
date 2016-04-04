@@ -461,6 +461,26 @@ SwaggerUi.partials.signature = (function () {
 
   };
 
+  // Swagger does not allow null values, even in examples. Convert the string "<null>" to null as
+  // a workaround.
+  var convertDummyNulls = function(value) {
+    if (value === '<null>') {
+      return null;
+    } else if (Object.prototype.toString.call(value) === '[object Array]') {
+      return value.map(function(element) {
+        return convertDummyNulls(element);
+      });
+    } else if (typeof value === 'object') {
+      var converted = {};
+      for (var prop in value) {
+        converted[prop] = convertDummyNulls(value[prop]);
+      }
+      return converted;
+    } else {
+      return value;
+    }
+  };
+
   // copy-pasted from swagger-js
   var schemaToJSON = function (schema, models, modelsToIgnore, modelPropertyMacro) {
     // Resolve the schema (Handle nested schemas)
@@ -546,7 +566,8 @@ SwaggerUi.partials.signature = (function () {
       }
     }
 
-    return output;
+    // Convert "<null>" string to null. Workaround since Swagger disallows nulls.
+    return convertDummyNulls(output);
   };
 
   // copy-pasted from swagger-js
