@@ -168,8 +168,8 @@ SwaggerUi.Views.ParameterView = Backbone.View.extend({
 
   // Return an appropriate template based on if the parameter is a list, readonly, required
   template: function(){
-    // API testing disabled
-    return Handlebars.templates.param_doc_only;
+    // // API testing disabled
+    // return Handlebars.templates.param_doc_only;
 
     if (this.model.isList) {
       return Handlebars.templates.param_list;

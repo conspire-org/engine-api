@@ -39,7 +39,7 @@
       //   url = "http://petstore.swagger.io/v2/swagger.json";
       // }
 
-      url = "./api.json"
+      url = "https://engine-public.conspire.com/swagger.json"
 
       hljs.configure({
         highlightSizeThreshold: 5000
@@ -52,7 +52,7 @@
       window.swaggerUi = new SwaggerUi({
         url: url,
         dom_id: "swagger-ui-container",
-        supportedSubmitMethods: [], // ['get', 'post', 'put', 'delete', 'patch'],
+        supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
         onComplete: function(swaggerApi, swaggerUi){
           if(typeof initOAuth == "function") {
             initOAuth({
